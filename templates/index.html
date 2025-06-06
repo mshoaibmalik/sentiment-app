@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Roman Urdu Sentiment Analyzer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #cce2ff, #e0f7ff);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            max-width: 700px;
+        }
+
+        textarea {
+            resize: none;
+            border-radius: 8px;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding: 15px 0;
+            text-align: center;
+            background-color: #004080;
+            color: white;
+            font-size: 14px;
+        }
+
+        h2 {
+            font-weight: bold;
+            color: #003366;
+        }
+    </style>
+    <script>
+        // Submit the form on "Enter" key press
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.querySelector('textarea');
+            const form = document.querySelector('form');
+
+            textarea.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();  // prevent new line
+                    form.submit();
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="card p-4 bg-white">
+            <h2 class="mb-4 text-center">Roman Urdu Sentiment Analyzer</h2>
+            <form method="POST">
+                <div class="form-group">
+                    <textarea class="form-control" name="text" rows="4"
+                        placeholder="Type your Roman Urdu comment and press Enter..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Analyze Sentiment</button>
+            </form>
+
+            {% if sentiment %}
+            <div class="alert alert-success mt-4 text-center">
+                Sentiment: <strong>{{ sentiment }}</strong>
+            </div>
+            {% elif warning %}
+            <div class="alert alert-warning mt-4 text-center">
+                {{ warning }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="footer">
+        Developed by <strong>Muhamad Shoaib Malik</strong> and <strong>Sadam Hakim</strong>
+    </div>
+</body>
+
+</html>
