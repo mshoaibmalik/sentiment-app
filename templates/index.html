@@ -3,118 +3,156 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Roman Urdu Sentiment Analyzer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <!-- Added for responsiveness -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Sentiment Analysis</title>
     <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --text-color: #333;
+            --card-bg: white;
+            --footer-color: #888;
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #fff;
+            --card-bg: #1e1e1e;
+            --footer-color: #aaa;
+        }
+
         body {
-            background: linear-gradient(to right, #cce2ff, #e0f7ff);
             font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
 
         .container {
-            max-width: 700px;
-            padding: 15px; /* added padding for small screens */
-        }
-
-        textarea {
-            resize: none;
-            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
         }
 
         .card {
+            background: var(--card-bg);
+            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
         }
 
-        .btn-primary {
-            background-color: #007bff;
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 80px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
             border: none;
-            font-weight: 500;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
-        .btn-primary:hover {
-            background-color: #0056b3;
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 18px;
         }
 
         .footer {
-            margin-top: 60px;
-            padding: 15px 0;
-            text-align: center;
-            background-color: #004080;
-            color: white;
-            font-size: 14px;
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: var(--footer-color);
         }
 
-        h2 {
-            font-weight: bold;
-            color: #003366;
+        .spinner {
+            display: none;
+            margin-top: 10px;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 576px) {
-            .container {
-                max-width: 100%;
-                padding: 10px;
-            }
-
-            textarea {
-                font-size: 1rem;
-            }
-
-            .btn-primary {
-                font-size: 1.1rem;
-                padding: 12px 0;
-            }
-
-            h2 {
-                font-size: 1.5rem;
+        @media (max-width: 500px) {
+            .card {
+                padding: 20px;
             }
         }
     </style>
     <script>
-        // Submit the form on "Enter" key press
-        document.addEventListener('DOMContentLoaded', () => {
-            const textarea = document.querySelector('textarea');
-            const form = document.querySelector('form');
+        document.addEventListener("DOMContentLoaded", function () {
+            const input = document.getElementById("text");
+            const form = document.getElementById("form");
+            const spinner = document.getElementById("spinner");
+            const modeToggle = document.getElementById("mode-toggle");
 
-            textarea.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();  // prevent new line
-                    form.submit();
+            input.addEventListener("keypress", function (event) {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    form.requestSubmit();
                 }
+            });
+
+            form.addEventListener("submit", function () {
+                spinner.style.display = "block";
+            });
+
+            modeToggle.addEventListener("click", function () {
+                document.body.classList.toggle("dark-mode");
             });
         });
     </script>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <div class="card p-4 bg-white">
-            <h2 class="mb-4 text-center">Roman Urdu Sentiment Analyzer</h2>
-            <form method="POST">
-                <div class="form-group">
-                    <textarea class="form-control" name="text" rows="4"
-                        placeholder="Type your Roman Urdu comment and press Enter..."></textarea>
+    <div class="container">
+        <div class="card">
+            <h1>Sentiment Analysis</h1>
+            <form id="form" method="POST">
+                <div style="display: flex; justify-content: center;">
+                    <textarea name="text" id="text" placeholder="Type your sentence..." required>{{ text }}</textarea>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Analyze Sentiment</button>
+                <button type="submit">Analyze</button>
+                <div class="spinner" id="spinner">Analyzing...</div>
             </form>
 
             {% if sentiment %}
-            <div class="alert alert-success mt-4 text-center">
-                Sentiment: <strong>{{ sentiment }}</strong>
-            </div>
-            {% elif warning %}
-            <div class="alert alert-warning mt-4 text-center">
-                {{ warning }}
+            <div class="result" style="color: {{ color }};">
+                Sentiment: {{ sentiment }}
             </div>
             {% endif %}
-        </div>
-    </div>
 
-    <div class="footer">
-        Developed by <strong>Muhamad Shoaib Malik</strong> and <strong>Sadam Hakim</strong>
+            <p style="margin-top:10px;">Model Accuracy: {{ accuracy }}</p>
+
+            <div class="footer">Developed by Muhammad Shoaib Malik, Sadam Hakim and Muhammad Muzammil</div>
+            <button id="mode-toggle" style="margin-top:15px; background:#555;">Toggle Dark Mode</button>
+        </div>
     </div>
 </body>
 

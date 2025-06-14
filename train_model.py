@@ -1,38 +1,50 @@
-import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
+from flask import Flask, render_template, request
 import joblib
 import os
 
-# Load dataset
-df = pd.read_csv('data/cleaned_dataset.csv')
-df.dropna(subset=['Text', 'Label'], inplace=True)
+app = Flask(__name__)
 
-# Prepare data
-X = df['Text']
-y = df['Label']
+# Load model and vectorizer
+model_path = os.path.join("sentiment_model", "model.pkl")
+vectorizer_path = os.path.join("sentiment_model", "vectorizer.pkl")
 
-vectorizer = CountVectorizer()
-X_vec = vectorizer.fit_transform(X)
+model = joblib.load(model_path)
+vectorizer = joblib.load(vectorizer_path)
 
-# Train/test split
-X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.2)
+# Define sentiment color mapping
+def get_sentiment_color(sentiment):
+    return {
+        "Positive": "green",
+        "Negative": "red",
+        "Neutral": "orange"
+    }.get(sentiment, "gray")
 
-# Train model
-model = MultinomialNB()
-model.fit(X_train, y_train)
+# Define model accuracy (you can dynamically compute this if needed)
+MODEL_ACCURACY = "78.01%"
 
-# Evaluate accuracy
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
+@app.route("/", methods=["GET", "POST"])
+def index():
+    sentiment = ""
+    color = ""
+    text = ""
 
-# Save model and vectorizer
-joblib.dump((model, vectorizer), 'model/sentiment_model.pkl')
+    if request.method == "POST":
+        text = request.form["text"]
+        if text.strip():
+            try:
+                vect = vectorizer.transform([text])
+                prediction = model.predict(vect)[0]
+                sentiment = prediction
+                color = get_sentiment_color(sentiment)
+            except Exception as e:
+                sentiment = "Prediction Error"
+                color = "gray"
+                print("Error:", e)
+        else:
+            sentiment = "Please enter text."
+            color = "gray"
 
-# Save accuracy score to file
-with open('model/accuracy.txt', 'w') as f:
-    f.write(str(round(accuracy * 100, 2)))
+    return render_template("index.html", sentiment=sentiment, color=color, text=text, accuracy=MODEL_ACCURACY)
 
-print(f"Model trained with accuracy: {accuracy * 100:.2f}%")
+if __name__ == "__main__":
+    app.run(debug=True)
