@@ -1,36 +1,50 @@
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from flask import Flask, render_template, request
 import joblib
 import os
 
-# Load your dataset
-data = pd.read_csv("data/cleaned_dataset.csv")  # Ensure the file contains 'text' and 'label' columns
-data.dropna(inplace=True)
+app = Flask(__name__)
 
-# Split data
-X = data['Text']
-y = data['Label']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Load model and vectorizer
+model_path = os.path.join("sentiment_model", "model.pkl")
+vectorizer_path = os.path.join("sentiment_model", "vectorizer.pkl")
 
-# Vectorizer and model
-vectorizer = TfidfVectorizer(ngram_range=(1,2), max_features=5000)
-X_train_vec = vectorizer.fit_transform(X_train)
-X_test_vec = vectorizer.transform(X_test)
+model = joblib.load(model_path)
+vectorizer = joblib.load(vectorizer_path)
 
-model = LogisticRegression()
-model.fit(X_train_vec, y_train)
+# Define sentiment color mapping
+def get_sentiment_color(sentiment):
+    return {
+        "Positive": "green",
+        "Negative": "red",
+        "Neutral": "orange"
+    }.get(sentiment, "gray")
 
-# Evaluate
-y_pred = model.predict(X_test_vec)
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Model Accuracy: {accuracy * 100:.2f}%")
+# Define model accuracy (you can dynamically compute this if needed)
+MODEL_ACCURACY = "78.01%"
 
-# Save model and vectorizer
-os.makedirs("sentiment_model", exist_ok=True)
-joblib.dump(model, "sentiment_model/model.pkl")
-joblib.dump(vectorizer, "sentiment_model/vectorizer.pkl")
+@app.route("/", methods=["GET", "POST"])
+def index():
+    sentiment = ""
+    color = ""
+    text = ""
 
+    if request.method == "POST":
+        text = request.form["text"]
+        if text.strip():
+            try:
+                vect = vectorizer.transform([text])
+                prediction = model.predict(vect)[0]
+                sentiment = prediction
+                color = get_sentiment_color(sentiment)
+            except Exception as e:
+                sentiment = "Prediction Error"
+                color = "gray"
+                print("Error:", e)
+        else:
+            sentiment = "Please enter text."
+            color = "gray"
+
+    return render_template("index.html", sentiment=sentiment, color=color, text=text, accuracy=MODEL_ACCURACY)
+
+if __name__ == "__main__":
+    app.run(debug=True)
